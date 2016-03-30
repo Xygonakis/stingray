@@ -3,7 +3,7 @@ __all__ = ["ParametricModel", "Const",
            "PowerLaw", "PowerLawConst",
            "BrokenPowerLaw", "BrokenPowerLawConst",
            "Lorentzian", "FixedCentroidLorentzian",
-           "CombinedModel"]
+           "Gaussian", "CombinedModel"]
 
 import numpy as np
 import scipy.stats
@@ -640,10 +640,74 @@ class FixedCentroidLorentzian(ParametricModel):
 
 class Gaussian(ParametricModel):
 
-    def __init__(self):
-        ## TODO: make a Gaussian parametric model
 
+    def __init__(self, hyperpars=None):
+        """
+        A Gaussian function of the form
+
+            $y(x) = \frac{A}{\sigma \sqrt{2\pi}} e^{\frac{-(x-x_0)^2}{2\sigma ^2}}$
+
+
+        The model has three parameters:
+            $x_0$: centroid location of the Gaussian, i.e. the location of
+                    the peak
+            $\sigma$: standard deviation of the Gaussian
+            $A$: the amplitude
+
+
+        If the user wishes to define their own prior that differs,
+        they can subclass this class and replace `set_prior` with their own
+        prior definition.
+
+
+        Attributes
+        ----------
+        npar: int
+            The number of parameters of the model
+
+        name: string
+            A string describing the name of the model
+
+        parnames: iterable of strings
+            Definition of the names for the parameters of the model,
+            to be used for example in plotting MCMC chains.
+
+        """
+        npar = 3
+        name = "gaussian"
+        parnames = ["x0", "sigma", "A"]
+        ParametricModel.__init__(self, npar, name, parnames)
+        if hyperpars is not None:
+            self.set_prior(hyperpars)
+
+
+    def set_prior(self, hyperpars=None):
+        #TODO: not sure about this part
         pass
+
+
+    def func(self, x, x0, sigma, amplitude):
+        """
+        Gaussian profile commonly used for fitting QPOs.
+
+        Parameters:
+        -----------
+        x: numpy.ndarray
+            The independent variable
+        x0: float
+            The position of the centroid of the Gaussian profile
+        sigma: float
+            The standard deviation of Gaussian profile
+        amplitude: float
+            The height or amplitude of the Gaussian profile
+        """
+        for p, n in zip([x0, sigma, amplitude], self.parnames):
+            assert np.isfinite(p), "{s} must be finite!".format(n)
+
+        A = amplitude / (sigma * np.sqrt(2 * np.pi))
+        res = A * np.exp(- (x - x0)**2.0 / (2 * sigma**2.0) )
+        return res
+
 
 
 

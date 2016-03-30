@@ -8,6 +8,7 @@ from stingray import ParametricModel, Const
 from stingray import PowerLaw, BrokenPowerLaw
 from stingray import Lorentzian, FixedCentroidLorentzian
 from stingray import CombinedModel
+from stingray import Gaussian
 
 logmin = parametricmodels.logmin
 
@@ -405,6 +406,64 @@ class TestFixedCentroidLorentzianModel(object):
 
 
 ## TODO: Need to write tests for PowerLawConst and BrokenPowerLawConst
+
+class TestGaussianModel(object):
+
+    @classmethod
+    def setup_class(cls):
+        cls.x = np.linspace(0.1, 10., 100)
+        cls.gaussian = Gaussian()
+
+    def test_shape(self):
+        x0 = 200.0
+        sigma = 2.0
+        amplitude = 2.0
+
+        c = self.gaussian(self.x, x0, sigma, amplitude)
+        assert c.shape == self.x.shape
+
+    def test_value(self):
+        x0 = 200.0
+        sigma = 1.0
+        amplitude = 2.0
+        qpo_func = lambda x, g, amp, cen: amp * np.exp(-(x - cen)**2.0 / (2 * g**2.0) ) /\
+                                          (sigma * np.sqrt(2 * np.pi))
+
+        for x in range(1, 20):
+            assert np.allclose(qpo_func(x, sigma, amplitude, x0),
+                               self.gaussian(x, x0, sigma, amplitude),
+                               atol=1.e-10)
+
+    @raises(AssertionError)
+    def test_func_fails_when_not_finite(self):
+        for sigma in [2.0, np.nan, np.inf]:
+            for amplitude in [np.inf, np.nan]:
+                for x0 in [2.0, np.nan, np.inf]:
+                    self.gaussian(self.x, x0, sigma, amplitude)
+
+    @raises(AttributeError)
+    def test_hyperparameters_not_set(self):
+        #TODO, prior function not set
+        pass
+
+
+    def test_hyperparameters(self):
+        #hyperparameters
+        #TODO, prior function not set
+        pass
+
+
+    def test_prior_works(self):
+        #TODO, prior function not set
+        pass
+
+
+    @raises(AssertionError)
+    def test_nonfinite_pars_fails_prior(self):
+        #TODO, there is no prior case not set
+        pass
+
+
 
 class TestCombinedModels(object):
 
